@@ -95,7 +95,7 @@ async fn main() {
     let app = app.fallback(handle_404);
 
     let host_at = std::env::var("HOST").unwrap_or("127.0.0.1".to_string());
-    let port_at = std::env::var("PORT").unwrap_or("12460".to_string());
+    let port_at = std::env::var("PORT").unwrap_or("5148".to_string());
 
     // run it
     let listener = TcpListener::bind(format!("{}:{}", host_at, port_at))
