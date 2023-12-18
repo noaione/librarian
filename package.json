@@ -1,5 +1,5 @@
 {
-    "name": "librarian",
+    "name": "k-librarian",
     "workspaces": [
         "frontend"
     ],

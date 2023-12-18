@@ -1,4 +1,4 @@
-# 📚 Librarian
+# 📚 K-Librarian
 
 A simple invite system web server for Komga.<br />
 Made on top of [Axum](https://github.com/tokio-rs/axum)

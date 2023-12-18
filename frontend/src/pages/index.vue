@@ -1,7 +1,7 @@
 <template>
   <main class="mx-auto my-auto flex h-screen flex-col items-center justify-center">
     <i-mdi-book-outline class="mb-2 h-12 w-12" />
-    <div class="font-variable variation-weight-bold text-xl">Librarian</div>
+    <div class="font-variable text-xl variation-weight-bold">K-Librarian</div>
     <hr class="server-width my-4 border-gray-600 opacity-70 dark:border-gray-400" />
     <div class="server-width flex flex-col justify-start">
       <label for="invite-code" class="mb-2 text-sm">Have an invite code?</label>
