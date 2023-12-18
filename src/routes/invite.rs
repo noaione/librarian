@@ -19,6 +19,7 @@ pub struct InviteOption {
     pub labels_exclude: Option<Vec<String>>,
     #[serde(rename = "sharedLibraries")]
     pub shared_libraries: Option<KomgaUserCreateOptionSharedLibraries>,
+    #[serde(rename = "expiresAt")]
     pub expire_at: Option<u64>,
 }
 
@@ -186,9 +187,46 @@ pub async fn get_invite_token(
     }
 }
 
+pub async fn get_all_invite_token(
+    _: AuthToken,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let mut redis_conn = state.redis.get_connection().unwrap();
+
+    let all_keys = redis_conn
+        .keys::<&str, Vec<String>>("librarian:invite:*")
+        .unwrap_or(vec![]);
+
+    let mut merged_token = vec![];
+    for key in all_keys {
+        let data: String = redis_conn.get(key).unwrap();
+
+        let raw_val: InviteToken = serde_json::from_str(&data).unwrap();
+
+        match remove_token_or(&mut redis_conn, &raw_val).await {
+            Ok(_) => {
+                merged_token.push(raw_val);
+            }
+            Err(_) => {}
+        }
+    }
+
+    let mut headers = HeaderMap::new();
+    headers.insert("Content-Type", "application/json".parse().unwrap());
+
+    // wrap the json in a {"ok": true, "data": {}} object
+    let wrapped_json: Value = serde_json::json!({
+        "ok": true,
+        "data": merged_token,
+    });
+
+    (headers, serde_json::to_string(&wrapped_json).unwrap())
+}
+
 pub fn invite_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/", axum::routing::get(get_invite_token))
+        .route("/all", axum::routing::get(get_all_invite_token))
         .route("/create", axum::routing::post(create_invite_token))
         .route("/config", axum::routing::get(get_invite_config))
         .with_state(state)

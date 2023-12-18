@@ -33,7 +33,7 @@ async fn main() {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                "k-librarian=debug,tower_http=debug,axum::rejection=trace".into()
+                "k_librarian=debug,tower_http=debug,axum::rejection=trace".into()
             }),
         )
         .with(tracing_subscriber::fmt::layer())
