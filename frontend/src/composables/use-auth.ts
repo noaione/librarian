@@ -1,5 +1,29 @@
 import { defineStore } from "pinia";
 
+function makeUrl(url: string): string {
+  const baseHost = import.meta.env.VITE_BASE_HOST;
+
+  if (url.startsWith("/")) {
+    url = url.slice(1);
+  }
+
+  if (!url.startsWith("api/")) {
+    url = `api/${url}`;
+  }
+
+  console.log(baseHost, import.meta.env);
+
+  if (baseHost) {
+    if (baseHost.endsWith("/")) {
+      return `${baseHost}${url}`;
+    }
+
+    return `${baseHost}/${url}`;
+  }
+
+  return `/${url}`;
+}
+
 const useAuth = defineStore(
   "librarian.auth",
   () => {
@@ -9,20 +33,22 @@ const useAuth = defineStore(
 
     async function test() {
       try {
-        const resp = await fetch("/api/auth/test", {
+        const resp = await fetch(makeUrl("/api/auth/test"), {
           headers: {
             Authorization: `Bearer ${token.value}`,
           },
         });
         const data = await resp.json();
 
-        if (data.ok) {
-          token.value = data.token;
-        } else {
+        if (!data.ok) {
+          token.value = undefined;
+
           throw new Error(data.error);
         }
       } catch (error) {
         console.error(error);
+
+        token.value = undefined;
 
         throw error;
       }
@@ -31,7 +57,7 @@ const useAuth = defineStore(
     async function login(loginToken: string) {
       // test with api
       try {
-        const resp = await fetch("/api/auth/login", {
+        const resp = await fetch(makeUrl("/api/auth/login"), {
           method: "POST",
           body: JSON.stringify({ token: loginToken }),
           headers: {

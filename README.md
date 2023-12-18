@@ -15,9 +15,10 @@ A basic and minimal clone of [Wizarr](https://github.com/wizarrrr/wizarr)
 1. Install both Node/NPM and Rust
 2. Clone this repository
 3. [Configure](#configuration) your instances
-4. Build the packages by using `cargo build --release` to build optimized release version
-5. Run the target file in `target/release/librarian`
-6. Open: http://127.0.0.1:5148
+4. Install dependencies for frontend: `npm install`
+5. Build the packages by using `cargo build --release` to build optimized release version
+6. Run the target file in `target/release/librarian`
+7. Open: http://127.0.0.1:5148
 
 ## Configuration
 The invite system use simple dotenv (`.env`) file to configure the server, you can see the `.env.example`

@@ -4,6 +4,7 @@ import { defineConfig, splitVendorChunk } from "vite";
 import vue from "@vitejs/plugin-vue";
 import Components from "unplugin-vue-components/vite";
 import VueRouter from "unplugin-vue-router/vite";
+import { VueUseComponentsResolver, VueUseDirectiveResolver } from "unplugin-vue-components/resolvers";
 import Icons from "unplugin-icons/vite";
 import IconsResolver from "unplugin-icons/resolver";
 import { VueRouterAutoImports } from "unplugin-vue-router";
@@ -49,7 +50,10 @@ export default defineConfig({
       compiler: "vue3",
       defaultClass: "v-icon",
     }),
-    Components({ dts: "./src/types/components.d.ts", resolvers: [IconsResolver()] }),
+    Components({
+      dts: "./src/types/components.d.ts",
+      resolvers: [IconsResolver(), VueUseComponentsResolver(), VueUseDirectiveResolver()],
+    }),
     AutoImport({
       imports: ["vue", VueRouterAutoImports, unheadVueComposablesImports],
       dts: "./src/types/imports.d.ts",
