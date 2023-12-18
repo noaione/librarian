@@ -1,0 +1,20 @@
+/target
+/node_modules
+
+# Assets
+assets/**/*.js
+assets/**/*.json
+assets/**/*.js.map
+assets/**/*.css
+assets/**/*.ico
+assets/**/*.png
+assets/**/*.jpg
+assets/**/*.webp
+assets/**/*.woff
+assets/**/*.woff2
+assets/**/*.ttf
+assets/**/*.otf
+
+# Other
+.env
+vite.config.ts.timestamp*

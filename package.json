@@ -1,0 +1,17 @@
+{
+    "name": "librarian",
+    "workspaces": [
+        "frontend"
+    ],
+    "scripts": {
+        "build": "npm run build:frontend && npm run build:backend",
+        "build:backend": "cross-env BUILD_FRONTEND=true cargo build --release --bin=librarian",
+        "build:backend:debug": "cross-env BUILD_FRONTEND=true cargo build --bin=librarian",
+        "build:frontend": "npm run build --workspace=frontend",
+        "dev": "npm run dev --workspace=frontend",
+        "dev:backend": "cargo run --bin=librarian"
+    },
+    "devDependencies": {
+        "cross-env": "^7.0.3"
+    }
+}
