@@ -11,7 +11,7 @@
       </div>
     </div>
     <hr class="mx-4 my-4 border-gray-600 opacity-70 dark:border-gray-400" />
-    <div v-if="data" class="mx-4 flex flex-col">
+    <div class="mx-4 flex flex-col">
       <div class="mb-2 flex flex-row items-center justify-between">
         <h2 class="font-variable text-xl variation-weight-[550]">Invites</h2>
         <button
@@ -23,10 +23,15 @@
           Create
         </button>
       </div>
-      <invite-add v-if="addMode" @add="createInvite" />
-      <div v-if="data.length > 0" class="flex flex-col gap-2">
-        <div v-for="invite in data" :key="invite.token" class="flex flex-row items-center justify-between py-2">
-          <div class="flex flex-col gap-1">
+      <invite-add v-if="addMode && !loading" @add="createInvite" />
+      <div v-if="currentInvites && currentInvites.length > 0" class="flex flex-col gap-2">
+        <div
+          v-for="(invite, idx) in currentInvites"
+          :key="invite.token"
+          class="flex flex-row items-center justify-between py-2"
+        >
+          <div class="flex flex-row items-center gap-1">
+            <span class="font-variable text-sm variation-weight-black">[{{ idx + 1 }}]</span>
             <span class="font-variable text-sm variation-weight-[550]">{{ invite.token }}</span>
           </div>
           <div class="flex flex-row gap-2">
@@ -40,13 +45,17 @@
               class="font-variable flex flex-row items-center border-2 border-red-500 bg-transparent px-2 py-1 text-sm text-red-500 transition variation-weight-[550] hover:bg-red-600 hover:text-white"
               @click="deleteInvite(invite.token)"
             >
-              Delete
+              Revoke
             </button>
           </div>
         </div>
       </div>
-      <div v-else class="flex flex-col gap-2">
+      <div v-else-if="currentInvites && currentInvites.length === 0" class="flex flex-col gap-2">
         <span class="font-variable text-sm variation-weight-[550]">No invites found.</span>
+      </div>
+      <div v-else-if="loading" class="flex flex-row items-center justify-center gap-2 text-center">
+        <i-mdi-loading class="h-8 w-8 animate-spin" />
+        <span>Loading...</span>
       </div>
     </div>
   </main>
@@ -64,7 +73,7 @@ const addMode = ref(false);
 const configInvite = useInviteConfig();
 const currentInvites = ref<Invite[]>();
 
-const { fetch, reload, data } = useBackend<Invite[]>(
+const { fetch, reload, loading } = useBackend<Invite[]>(
   "/invite/all",
   {
     method: "GET",

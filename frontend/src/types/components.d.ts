@@ -13,6 +13,7 @@ declare module 'vue' {
     IMdiHome: typeof import('~icons/mdi/home')['default']
     IMdiLightbulbOn: typeof import('~icons/mdi/lightbulb-on')['default']
     IMdiLightbulbOutline: typeof import('~icons/mdi/lightbulb-outline')['default']
+    IMdiLoading: typeof import('~icons/mdi/loading')['default']
     IMdiLogin: typeof import('~icons/mdi/login')['default']
     IMdiPlus: typeof import('~icons/mdi/plus')['default']
     IMdiWebOff: typeof import('~icons/mdi/web-off')['default']
