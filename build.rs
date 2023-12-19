@@ -57,7 +57,7 @@ fn main() {
     for file in watch_files {
         println!(
             "cargo:rerun-if-changed={}",
-            file.display().to_string().replace("\\", "/").as_str()
+            file.display().to_string().replace('\\', "/").as_str()
         );
     }
 
@@ -69,7 +69,7 @@ fn main() {
 
     // Build frontend
     let status = Command::new("npm")
-        .args(&["run", "build:frontend"])
+        .args(["run", "build:frontend"])
         .status()
         .unwrap();
 

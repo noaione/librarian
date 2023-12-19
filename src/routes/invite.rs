@@ -34,12 +34,12 @@ pub struct InviteOption {
     pub roles: Option<Vec<String>>,
 }
 
-impl Into<KomgaUserCreateOption> for InviteOption {
-    fn into(self) -> KomgaUserCreateOption {
+impl From<InviteOption> for KomgaUserCreateOption {
+    fn from(val: InviteOption) -> Self {
         KomgaUserCreateOption {
-            labels_allow: self.labels_allow,
-            labels_exclude: self.labels_exclude,
-            shared_libraries: self.shared_libraries,
+            labels_allow: val.labels_allow,
+            labels_exclude: val.labels_exclude,
+            shared_libraries: val.shared_libraries,
         }
     }
 }
@@ -218,7 +218,7 @@ pub async fn get_invite_token(
                         "error": "Invite token expired"
                     });
 
-                    return (headers, serde_json::to_string(&wrapped_json).unwrap());
+                    (headers, serde_json::to_string(&wrapped_json).unwrap())
                 }
             }
         }
@@ -411,7 +411,7 @@ pub async fn apply_invite_token(
                             let mut komga_host = state.komga.get_host();
 
                             if let Ok(komga_hostname) = std::env::var("KOMGA_HOSTNAME") {
-                                if komga_hostname.trim().len() > 0 {
+                                if !komga_hostname.trim().is_empty() {
                                     komga_host = komga_hostname.trim().to_owned();
                                 }
                             }

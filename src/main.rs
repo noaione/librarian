@@ -57,7 +57,7 @@ async fn main() {
     let redis_pass = std::env::var("REDIS_PASS").unwrap_or("".to_string());
 
     let mut redis_url = format!("redis://{}:{}", redis_host, redis_port);
-    if redis_pass != "" {
+    if !redis_pass.is_empty() {
         redis_url = format!("redis://:{}@{}:{}", redis_pass, redis_host, redis_port);
     }
 
