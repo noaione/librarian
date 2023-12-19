@@ -109,8 +109,8 @@ async fn main() {
 }
 
 async fn handle_404(url: Uri) -> Redirect {
-    let path = url.path().to_string();
-    tracing::info!("404: {}", path);
+    let path = url.to_string();
+    tracing::info!("404: {:?}", url);
 
     let redirect_url = format!("/?redirect={}", encode(&path));
     Redirect::to(&redirect_url)

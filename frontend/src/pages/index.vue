@@ -11,12 +11,11 @@
           ref="inputRef"
           v-model="inviteCode"
           class="form-input w-full transition disabled:cursor-not-allowed disabled:border-opacity-50 disabled:bg-gray-100 dark:bg-gray-800 disabled:dark:bg-gray-900"
-          :disabled="submitting"
+          :placeholder="`/invite?token=... or just the token`"
           @keypress="interceptEnter"
         />
         <button
           class="aspect-square h-full w-auto px-2 py-2 transition hover:opacity-80 disabled:animate-pulse disabled:cursor-not-allowed"
-          :disabled="submitting"
           @click="redirectToInvite"
         >
           <i-mdi-arrow-right-thick class="mx-auto" />
@@ -34,13 +33,54 @@
 </template>
 
 <script setup lang="ts">
+import useToast from "@/composables/use-toast";
+
+const router = useRouter();
+const toast = useToast();
 const inputRef = ref<HTMLInputElement>();
 const inviteCode = ref();
-const submitting = ref(false);
+
+function tryToExtractInviteCode(inviteCode: string) {
+  try {
+    const url = new URL(inviteCode);
+
+    const params = new URLSearchParams(url.search);
+
+    return params.get("token");
+  } catch {
+    // check if valid UUID
+    const uuidre = /\w{8}(?:-\w{4}){3}-\w{12}/g;
+
+    if (uuidre.test(inviteCode)) {
+      inviteCode;
+    }
+  }
+
+  return;
+}
 
 function redirectToInvite() {
-  submitting.value = true;
   inputRef.value?.blur();
+
+  // Extract the invite code from the input
+  // It can either be a full URL or just the code
+  const data = tryToExtractInviteCode(inviteCode.value);
+
+  if (!data) {
+    toast.toast({
+      message: "Invalid invite code",
+      type: "error",
+    });
+
+    return;
+  }
+
+  router.push({
+    name: "/invite",
+    query: {
+      token: data,
+    },
+  });
 }
 
 function interceptEnter(event: KeyboardEvent) {

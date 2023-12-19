@@ -35,7 +35,11 @@
         >
           <div class="flex flex-row items-center gap-1">
             <span class="font-variable text-sm variation-weight-black">[{{ idx + 1 }}]</span>
-            <span class="font-variable text-sm variation-weight-[550]">{{ invite.token }}</span>
+            <div class="mr-2 flex flex-row flex-wrap items-center">
+              <span class="font-variable break-all text-sm variation-weight-[550]">{{ invite.token }}</span>
+              <span class="mx-2 hidden sm:block">|</span>
+              <expiry-time :expires-at="invite.option.expiresAt ?? undefined" />
+            </div>
           </div>
           <div class="flex flex-row gap-2">
             <button
@@ -131,19 +135,30 @@ async function deleteInvite(token: string) {
   }
 }
 
-async function createInvite(data: { libraries: string[]; labels: string[]; excludeLabels: string[] }) {
+async function createInvite(data: {
+  libraries: string[];
+  labels: string[];
+  excludeLabels: string[];
+  roles: string[];
+  expiresAt?: number | null;
+}) {
   const allLibrary = data.libraries.includes("all") || data.libraries.length === 0;
 
   addMode.value = false;
 
-  const jsonData = {
+  const jsonData: Record<string, any> = {
     labelsAllow: data.labels,
     labelsExclude: data.excludeLabels,
     sharedLibraries: {
       all: allLibrary,
       libraryIds: allLibrary ? [] : data.libraries,
     },
+    roles: data.roles,
   };
+
+  if (data.expiresAt) {
+    jsonData.expiresAt = data.expiresAt;
+  }
 
   const results = await useBackendFetch<Invite>("/invite", {
     method: "POST",
@@ -165,7 +180,7 @@ async function createInvite(data: { libraries: string[]; labels: string[]; exclu
 }
 
 function shareInviteUrl(token: string) {
-  const currentHost = window.location.host;
+  const currentHost = window.location.origin;
 
   const targetUrl = `${currentHost}/invite?token=${token}`;
 

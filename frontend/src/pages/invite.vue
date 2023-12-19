@@ -72,6 +72,9 @@
     </div>
     <hr class="server-width my-4 border-gray-600 opacity-70 dark:border-gray-400" />
     <div class="mt-2 flex flex-row gap-2">
+      <router-link to="/" class="transition hover:opacity-70 dark:hover:opacity-80">
+        <i-mdi-home class="h-8 w-8" />
+      </router-link>
       <router-link to="/admin" class="transition hover:opacity-70 dark:hover:opacity-80">
         <i-mdi-login class="h-8 w-8" />
       </router-link>
@@ -172,7 +175,7 @@ onMounted(async () => {
 
   if (!searchParam.has("token")) {
     toast.toast({
-      message: "Invalid invite link",
+      message: "Missing invite link",
       type: "error",
     });
 
@@ -188,10 +191,25 @@ onMounted(async () => {
   } catch (error) {
     if (error instanceof Error) {
       toast.toast({
+        title: "Unknown error occured",
         message: error.message,
         type: "error",
       });
+    } else {
+      toast.toast({
+        title: "Failed to fetch invite",
+        message: String(error),
+        type: "error",
+      });
     }
+  }
+
+  if (validUserRef.value) {
+    autoAnimate(validUserRef.value);
+  }
+
+  if (validPassRef.value) {
+    autoAnimate(validPassRef.value);
   }
 });
 
@@ -214,16 +232,6 @@ watch(
     validationPassword.value = newPass.length === 0 ? ["Password cannot be empty"] : [];
   }
 );
-
-onMounted(() => {
-  if (validUserRef.value) {
-    autoAnimate(validUserRef.value);
-  }
-
-  if (validPassRef.value) {
-    autoAnimate(validPassRef.value);
-  }
-});
 </script>
 
 <style scoped lang="postcss">

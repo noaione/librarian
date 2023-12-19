@@ -8,11 +8,13 @@ export interface InviteOption {
   labelsExclude: string[] | null;
   sharedLibraries: InviteSharedLibrary | null;
   expiresAt: number | null;
+  roles: string[] | null;
 }
 
 export interface Invite {
   token: string;
   option: InviteOption;
+  user_id: string | null;
 }
 
 export interface InviteConfig {
