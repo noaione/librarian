@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use axum::{
-    extract::{Query, State},
+    extract::{Path, State},
     http::HeaderMap,
     response::IntoResponse,
     Json, Router,
@@ -161,12 +161,12 @@ async fn remove_token_or(redis_conn: &mut Connection, token: &InviteToken) -> Re
 
 pub async fn get_invite_token(
     State(state): State<AppState>,
-    query: Query<InviteQuery>,
+    Path(token): Path<String>,
 ) -> impl IntoResponse {
     let mut redis_conn = state.redis.get_async_connection().await.unwrap();
 
     let data: Result<String, _> = redis_conn
-        .hget(KLIBRARIAN_INVITE_TOKEN, query.token.clone())
+        .hget(KLIBRARIAN_INVITE_TOKEN, token.clone())
         .await;
 
     match data {
@@ -243,9 +243,9 @@ pub async fn get_all_invite_token(
 
 pub fn invite_routes(state: AppState) -> Router<AppState> {
     Router::new()
-        .route("/", axum::routing::get(get_invite_token))
-        .route("/all", axum::routing::get(get_all_invite_token))
-        .route("/create", axum::routing::post(create_invite_token))
+        .route("/", axum::routing::get(get_all_invite_token))
+        .route("/", axum::routing::post(create_invite_token))
+        .route("/:token", axum::routing::get(get_invite_token))
         .route("/config", axum::routing::get(get_invite_config))
         .with_state(state)
 }

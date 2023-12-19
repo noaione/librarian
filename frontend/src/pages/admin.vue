@@ -13,7 +13,10 @@
     <hr class="mx-4 my-4 border-gray-600 opacity-70 dark:border-gray-400" />
     <div class="mx-4 flex flex-col">
       <div class="mb-2 flex flex-row items-center justify-between">
-        <h2 class="font-variable text-xl variation-weight-[550]">Invites</h2>
+        <h2 class="font-variable text-xl variation-weight-[550]">
+          Invites
+          <span v-if="currentInvites !== undefined">[{{ currentInvites.length }}]</span>
+        </h2>
         <button
           v-if="!addMode"
           class="font-variable flex flex-row items-center border-2 border-green-500 bg-transparent px-2 py-1 text-sm text-green-500 transition variation-weight-[550] hover:bg-green-600 hover:text-white"
@@ -74,7 +77,7 @@ const configInvite = useInviteConfig();
 const currentInvites = ref<Invite[]>();
 
 const { fetch, reload, loading } = useBackend<Invite[]>(
-  "/invite/all",
+  "/invite",
   {
     method: "GET",
   },
@@ -101,7 +104,7 @@ async function createInvite(data: { libraries: string[]; labels: string[]; exclu
     },
   };
 
-  const results = await useBackendFetch<Invite>("/invite/create", {
+  const results = await useBackendFetch<Invite>("/invite", {
     method: "POST",
     body: JSON.stringify(jsonData),
     headers: {
