@@ -1,6 +1,6 @@
 import useAuth from "./use-auth";
 
-function makeUrl(url: string): string {
+export function makeUrl(url: string): string {
   const baseHost = import.meta.env.VITE_BASE_HOST;
 
   if (url.startsWith("/")) {

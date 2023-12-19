@@ -212,6 +212,31 @@ pub async fn get_invite_token(
     }
 }
 
+pub async fn delete_invite_token(
+    _: AuthToken,
+    State(state): State<AppState>,
+    Path(token): Path<String>,
+) -> impl IntoResponse {
+    let mut redis_conn = state.redis.get_async_connection().await.unwrap();
+
+    let data = redis_conn
+        .hdel(KLIBRARIAN_INVITE_TOKEN, token)
+        .await
+        .unwrap_or(0);
+
+    let mut headers = HeaderMap::new();
+    headers.insert("Content-Type", "application/json".parse().unwrap());
+
+    let ok = data > 0;
+
+    // wrap the json in a {"ok": true, "data": {}} object
+    let wrapped_json: Value = serde_json::json!({
+        "ok": ok,
+    });
+
+    (headers, serde_json::to_string(&wrapped_json).unwrap())
+}
+
 pub async fn get_all_invite_token(
     _: AuthToken,
     State(state): State<AppState>,
@@ -246,6 +271,7 @@ pub fn invite_routes(state: AppState) -> Router<AppState> {
         .route("/", axum::routing::get(get_all_invite_token))
         .route("/", axum::routing::post(create_invite_token))
         .route("/:token", axum::routing::get(get_invite_token))
+        .route("/:token", axum::routing::delete(delete_invite_token))
         .route("/config", axum::routing::get(get_invite_config))
         .with_state(state)
 }

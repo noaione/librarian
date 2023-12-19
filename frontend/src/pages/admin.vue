@@ -67,16 +67,22 @@
 <script setup lang="ts">
 import useAuth from "@/composables/use-auth";
 import useBackend from "@/composables/use-backend";
-import useBackendFetch from "@/composables/use-backend-fetch";
+import useBackendFetch, { makeUrl } from "@/composables/use-backend-fetch";
 import useInviteConfig from "@/composables/use-invite-config";
+import useToast from "@/composables/use-toast";
 import type { Invite } from "@/types/invites";
 
 const auth = useAuth();
 const addMode = ref(false);
 const configInvite = useInviteConfig();
+const toasts = useToast();
 const currentInvites = ref<Invite[]>();
 
-const { fetch, reload, loading } = useBackend<Invite[]>(
+const {
+  fetch: inviteFetch,
+  reload,
+  loading,
+} = useBackend<Invite[]>(
   "/invite",
   {
     method: "GET",
@@ -86,8 +92,43 @@ const { fetch, reload, loading } = useBackend<Invite[]>(
   }
 );
 
-function deleteInvite(token: string) {
-  // TODO
+async function deleteInvite(token: string) {
+  const tokenHeader = new Headers();
+
+  tokenHeader.append("Authorization", `Bearer ${auth.token}`);
+
+  try {
+    const results = await fetch(makeUrl(`/invite/${token}`), {
+      method: "DELETE",
+      headers: tokenHeader,
+    });
+
+    const json = await results.json();
+
+    if (json.ok) {
+      currentInvites.value = currentInvites.value?.filter((invite) => invite.token !== token);
+
+      toasts.toast({
+        title: "Invite revoked",
+        message: `The invite has been revoked for: ${token}`,
+        type: "success",
+      });
+    } else {
+      toasts.toast({
+        title: "Failed to revoke invite",
+        message: `Failed to revoke invite for: ${token}`,
+        type: "error",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+
+    toasts.toast({
+      title: "Unknown error",
+      message: "An unknown error occurred, please check console.",
+      type: "error",
+    });
+  }
 }
 
 async function createInvite(data: { libraries: string[]; labels: string[]; excludeLabels: string[] }) {
@@ -114,6 +155,12 @@ async function createInvite(data: { libraries: string[]; labels: string[]; exclu
 
   if (results) {
     currentInvites.value?.push(results);
+
+    toasts.toast({
+      title: "Invite created",
+      message: `The invite has been created for: ${results.token}`,
+      type: "success",
+    });
   }
 }
 
@@ -122,7 +169,20 @@ function shareInviteUrl(token: string) {
 
   const targetUrl = `${currentHost}/invite?token=${token}`;
 
-  navigator.clipboard.writeText(targetUrl);
+  navigator.clipboard
+    .writeText(targetUrl)
+    .then(() => {
+      toasts.toast({
+        message: "Copied to clipboard",
+        duration: 1500,
+      });
+    })
+    .catch(() => {
+      toasts.toast({
+        message: "Failed to copy to clipboard",
+        type: "error",
+      });
+    });
 }
 
 async function fetchInviteConfigs() {
@@ -132,7 +192,7 @@ async function fetchInviteConfigs() {
 }
 
 function fetchData() {
-  fetch()
+  inviteFetch()
     .then((invites) => {
       currentInvites.value = invites;
 
