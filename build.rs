@@ -1,7 +1,7 @@
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::{fs, process::Command};
 
 fn collect_files(dir: &Path, files: &mut Vec<PathBuf>) {
     for entry in fs::read_dir(dir).unwrap() {
@@ -38,6 +38,28 @@ fn clean_assets_folder(assets_folder: &PathBuf) {
     }
 }
 
+fn is_dist_folder_built(dist_dir: &Path) {
+    let dist_folder = dist_dir.join("assets");
+    if !dist_folder.exists() || !dist_folder.is_dir() {
+        panic!("Please run `npm run build` first!");
+    }
+
+    let dist_folder = dist_dir.join("index.html");
+    if !dist_folder.exists() || !dist_folder.is_file() {
+        panic!("Please run `npm run build` first!");
+    }
+
+    let dist_folder = dist_dir.join("favicon.ico");
+    if !dist_folder.exists() || !dist_folder.is_file() {
+        panic!("Please run `npm run build` first!");
+    }
+
+    let assets_dir = dist_dir.join("assets");
+    if !assets_dir.exists() || !assets_dir.is_dir() {
+        panic!("Please run `npm run build` first!");
+    }
+}
+
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
@@ -62,20 +84,10 @@ fn main() {
     }
 
     let dist_dir = Path::new("frontend/dist");
+    is_dist_folder_built(dist_dir);
+
     let assets_dir = Path::new(&manifest_dir).join("assets");
-
-    // remove old assets except .keep
     clean_assets_folder(&assets_dir);
-
-    // Build frontend
-    let status = Command::new("npm")
-        .args(["run", "build:frontend"])
-        .status()
-        .unwrap();
-
-    if !status.success() {
-        panic!("Failed to build frontend");
-    }
 
     // Copy frontend/dist to root assets/
     // Do not include index.html since we will be serving it directly from the backend

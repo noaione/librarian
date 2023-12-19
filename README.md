@@ -16,9 +16,11 @@ A basic and minimal clone of [Wizarr](https://github.com/wizarrrr/wizarr)
 2. Clone this repository
 3. [Configure](#configuration) your instances
 4. Install dependencies for frontend: `npm install`
-5. Build the packages by using `cargo build --release` to build optimized release version
-6. Run the target file in `target/release/librarian`
-7. Open: http://127.0.0.1:5148
+5. Build the frontend using: `npm run build`
+6. Run cargo build: `cargo build --release`
+   - If your assets folder is empty and nothing is copying, manually copy the `frontend/dist` folder contents into `assets/`, do not include the `index.html`
+7. Execute the target file in `target/release/k-librarian`
+8. Open: http://127.0.0.1:5148
 
 ## Configuration
 The invite system use simple dotenv (`.env`) file to configure the server, you can see the `.env.example`
