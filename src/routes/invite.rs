@@ -408,10 +408,18 @@ pub async fn apply_invite_token(
                     match res {
                         Ok(_) => {
                             // wrap the json in a {"ok": true, "data": {}} object
+                            let mut komga_host = state.komga.get_host();
+
+                            if let Ok(komga_hostname) = std::env::var("KOMGA_HOSTNAME") {
+                                if komga_hostname.trim().len() > 0 {
+                                    komga_host = komga_hostname.trim().to_owned();
+                                }
+                            }
+
                             let wrapped_json: Value = serde_json::json!({
                                 "ok": true,
                                 "data": serde_json::json!({
-                                    "host": state.komga.get_host(),
+                                    "host": komga_host,
                                 })
                             });
 

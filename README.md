@@ -39,6 +39,9 @@ KOMGA_HOST=https://demo.komga.org
 KOMGA_USERNAME=demo@komga.org
 # The password of the komga server
 KOMGA_PASSWORD=demo
+# The actual hostname of Komga, if you prefer to put KOMGA_HOST as localhost and you're running behind reverse
+# proxy, define this for the actual instances URL.
+# KOMGA_HOSTNAME=
 
 ### Redis configuration
 # Host and port of the redis server
