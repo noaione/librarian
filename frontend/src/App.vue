@@ -1,5 +1,6 @@
 <template>
   <RouterView class="overflow-x-hidden" />
+  <ToastContainer />
 </template>
 
 <script setup lang="ts">

@@ -151,6 +151,13 @@ module.exports = {
       },
     ],
     "space-infix-ops": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+      },
+    ],
   },
   overrides: [
     {

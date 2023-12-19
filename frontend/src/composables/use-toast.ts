@@ -1,0 +1,62 @@
+import { defineStore } from "pinia";
+
+export interface HitagiToast {
+  title?: string;
+  message: string;
+  type: "success" | "info" | "warning" | "error";
+  duration: number;
+  persist?: boolean;
+}
+
+export interface HitagiToastInternal extends HitagiToast {
+  id: string;
+}
+
+interface ToastState {
+  toasts: HitagiToastInternal[];
+}
+
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+
+const useToast = defineStore("librarian.toast", {
+  state: (): ToastState => ({
+    toasts: [],
+  }),
+  getters: {
+    hasToast(): boolean {
+      return this.toasts.length > 0;
+    },
+  },
+  actions: {
+    toast(toast: Optional<HitagiToast, "type" | "duration">): void {
+      const mergedToast: HitagiToast = {
+        type: "info",
+        duration: 5000,
+        ...toast,
+      };
+
+      if (mergedToast.duration < 1000) {
+        mergedToast.duration = 1000;
+      }
+
+      const itemId = Date.now().toString();
+
+      // put toast at start of array
+      this.toasts = [
+        {
+          ...mergedToast,
+          id: itemId,
+        },
+        ...this.toasts,
+      ];
+    },
+    removeToast(toast: HitagiToastInternal | string): void {
+      this.toasts =
+        typeof toast === "string"
+          ? this.toasts.filter((t) => t.id !== toast)
+          : this.toasts.filter((t) => t.id !== toast.id);
+    },
+  },
+});
+
+export default useToast;

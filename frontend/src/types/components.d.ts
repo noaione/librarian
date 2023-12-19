@@ -10,6 +10,7 @@ declare module 'vue' {
     DarkToggle: typeof import('./../components/DarkToggle.vue')['default']
     IMdiArrowRightThick: typeof import('~icons/mdi/arrow-right-thick')['default']
     IMdiBookOutline: typeof import('~icons/mdi/book-outline')['default']
+    IMdiClose: typeof import('~icons/mdi/close')['default']
     IMdiHome: typeof import('~icons/mdi/home')['default']
     IMdiLightbulbOn: typeof import('~icons/mdi/lightbulb-on')['default']
     IMdiLightbulbOutline: typeof import('~icons/mdi/lightbulb-outline')['default']
@@ -21,5 +22,7 @@ declare module 'vue' {
     LoginForm: typeof import('./../components/LoginForm.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Toast: typeof import('./../components/Toast.vue')['default']
+    ToastContainer: typeof import('./../components/ToastContainer.vue')['default']
   }
 }
