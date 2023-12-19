@@ -1,9 +1,8 @@
 # 📚 K-Librarian
 
-A simple invite system web server for Komga.<br />
-Made on top of [Axum](https://github.com/tokio-rs/axum)
+A simple web server to create an invite system for Komga.<br />
 
-A basic and minimal clone of [Wizarr](https://github.com/wizarrrr/wizarr)
+Made on top of [Axum](https://github.com/tokio-rs/axum) for high performance and memory efficient web server.
 
 ## Requirements
 1. Node.js 18.x or higher
@@ -12,7 +11,7 @@ A basic and minimal clone of [Wizarr](https://github.com/wizarrrr/wizarr)
 4. Komga server
 
 ## Usages
-1. Install both Node/NPM and Rust
+1. Install Node/NPM, Rust and Redis
 2. Clone this repository
 3. [Configure](#configuration) your instances
 4. Install dependencies for frontend: `npm install`
