@@ -73,7 +73,7 @@ fn main() {
     // Config file watch rerun
     println!("cargo:rerun-if-changed=frontend/vite.config.ts");
     println!("cargo:rerun-if-changed=frontend/package.json");
-    println!("cargo:rerun-if-changed=frontend/package-lock.json");
+    println!("cargo:rerun-if-changed=package-lock.json");
     println!("cargo:rerun-if-changed=frontend/tailwind.config.js");
     // Watch frontend/src files
     for file in watch_files {

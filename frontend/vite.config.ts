@@ -11,6 +11,8 @@ import { VueRouterAutoImports } from "unplugin-vue-router";
 import { unheadVueComposablesImports } from "@unhead/vue";
 import AutoImport from "unplugin-auto-import/vite";
 import type { ManualChunkMeta } from "rollup";
+import browserslist from "browserslist";
+import { browserslistToTargets } from "lightningcss";
 
 function splitMoreVendorChunk(
   id: string,
@@ -34,6 +36,7 @@ function splitMoreVendorChunk(
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  appType: "spa",
   plugins: [
     VueRouter({
       routesFolder: "src/pages",
@@ -65,6 +68,10 @@ export default defineConfig({
     },
   },
   build: {
+    cssMinify: "lightningcss",
+    cssCodeSplit: false,
+    target: "es2022",
+    modulePreload: false,
     rollupOptions: {
       output: {
         manualChunks: (id, getModuleInfo) => {
@@ -100,6 +107,15 @@ export default defineConfig({
           });
         },
       },
+    },
+    sourcemap: true,
+  },
+  css: {
+    lightningcss: {
+      nonStandard: {
+        deepSelectorCombinator: true,
+      },
+      targets: browserslistToTargets(browserslist()),
     },
   },
 });
