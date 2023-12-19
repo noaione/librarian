@@ -4,7 +4,7 @@ use axum::{
     response::IntoResponse,
     Json, Router,
 };
-use redis::{Commands, Connection};
+use redis::{aio::Connection, AsyncCommands, Commands};
 use serde_json::Value;
 
 use crate::{komga::KomgaUserCreateOptionSharedLibraries, AppState};
@@ -126,6 +126,7 @@ async fn remove_token_or(redis_conn: &mut Connection, token: &InviteToken) -> Re
             if current_unix > expire_at {
                 redis_conn
                     .del::<String, String>(format!("librarian:invite:{}", token.token))
+                    .await
                     .unwrap_or("".to_string());
                 Err(())
             } else {
@@ -140,9 +141,11 @@ pub async fn get_invite_token(
     State(state): State<AppState>,
     query: Query<InviteQuery>,
 ) -> impl IntoResponse {
-    let mut redis_conn = state.redis.get_connection().unwrap();
+    let mut redis_conn = state.redis.get_async_connection().await.unwrap();
 
-    let data = redis_conn.get::<String, String>(format!("librarian:invite:{}", query.token));
+    let data = redis_conn
+        .get::<String, String>(format!("librarian:invite:{}", query.token))
+        .await;
 
     match data {
         Ok(data) => {
@@ -191,15 +194,16 @@ pub async fn get_all_invite_token(
     _: AuthToken,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let mut redis_conn = state.redis.get_connection().unwrap();
+    let mut redis_conn = state.redis.get_async_connection().await.unwrap();
 
     let all_keys = redis_conn
         .keys::<&str, Vec<String>>("librarian:invite:*")
+        .await
         .unwrap_or(vec![]);
 
     let mut merged_token = vec![];
     for key in all_keys {
-        let data: String = redis_conn.get(key).unwrap();
+        let data: String = redis_conn.get(key).await.unwrap();
 
         let raw_val: InviteToken = serde_json::from_str(&data).unwrap();
 
