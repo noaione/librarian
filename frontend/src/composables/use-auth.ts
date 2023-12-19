@@ -11,8 +11,6 @@ function makeUrl(url: string): string {
     url = `api/${url}`;
   }
 
-  console.log(baseHost, import.meta.env);
-
   if (baseHost) {
     if (baseHost.endsWith("/")) {
       return `${baseHost}${url}`;
