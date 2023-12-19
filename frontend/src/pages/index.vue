@@ -92,6 +92,10 @@ function interceptEnter(event: KeyboardEvent) {
     }
   }
 }
+
+useHeadSafe({
+  title: "K-Librarian",
+});
 </script>
 
 <style scoped lang="postcss">

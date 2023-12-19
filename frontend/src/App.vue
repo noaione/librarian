@@ -11,8 +11,6 @@ onMounted(() => {
   const windowSearch = new URLSearchParams(window.location.search);
   const redirect = windowSearch.get("redirect");
 
-  console.info(`Redirect query: ${redirect}`);
-
   if (redirect) {
     console.info(`Redirecting to: ${redirect}`);
     router.push(decodeURIComponent(redirect));

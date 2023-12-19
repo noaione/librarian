@@ -220,6 +220,10 @@ function fetchData() {
 
 onMounted(() => {
   if (!auth.isLoggedIn) {
+    useHeadSafe({
+      title: `Login - Admin :: K-Librarian`,
+    });
+
     return;
   }
 
@@ -227,6 +231,10 @@ onMounted(() => {
     .test()
     .then(() => {
       // Do fetch
+      useHeadSafe({
+        title: `Admin :: K-Librarian`,
+      });
+
       nextTick(() => {
         fetchData();
       });
@@ -240,6 +248,10 @@ watch(
   () => auth.isLoggedIn,
   async (logged) => {
     if (logged) {
+      useHeadSafe({
+        title: `Admin :: K-Librarian`,
+      });
+
       await nextTick();
 
       const [reloadPromise, _] = await Promise.all([reload(), fetchInviteConfigs()]);
@@ -247,6 +259,10 @@ watch(
       if (reloadPromise) {
         currentInvites.value = reloadPromise;
       }
+    } else {
+      useHeadSafe({
+        title: `Login - Admin :: K-Librarian`,
+      });
     }
   }
 );

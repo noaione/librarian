@@ -188,6 +188,10 @@ onMounted(async () => {
     const results = await useBackendFetch<Invite>(`/invite/${token}`);
 
     inviteData.value = results;
+
+    useHeadSafe({
+      title: `Invite - ${results.token} :: K-Librarian`,
+    });
   } catch (error) {
     if (error instanceof Error) {
       toast.toast({
