@@ -124,7 +124,7 @@ function emitAdd() {
       roleFileDownload.value ? "FILE_DOWNLOAD" : "",
       rolePageRead.value ? "PAGE_STREAMING" : "",
     ].filter((role) => role !== ""),
-    expiresAt: unixTimestamp ? Math.floor(unixTimestamp / 1000) : undefined,
+    expiresAt: unixTimestamp === -1 ? undefined : Math.floor(unixTimestamp / 1000),
   });
 }
 </script>
