@@ -47,3 +47,8 @@ REDIS_PORT=6379
 # Password of the redis server, uncomment if needed
 # REDIS_PASS=
 ```
+
+## Attribution
+
+The icon/favicon/logo used by K-Librarian is a non-modified version of icon called **books icon** by Freepik: [Flaticon](https://www.flaticon.com/free-icons/books)
+All rights reserved to the original creator.
