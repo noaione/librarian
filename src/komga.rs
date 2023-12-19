@@ -22,12 +22,12 @@ pub struct KomgaUser {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct KomgaUserCreate {
-    email: String,
-    password: String,
-    roles: Vec<String>,
+    pub email: String,
+    pub password: String,
+    pub roles: Vec<String>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct KomgaUserCreateOptionSharedLibraries {
     pub all: bool,
     #[serde(rename = "libraryIds")]
@@ -91,7 +91,7 @@ impl KomgaClient {
         &self,
         user_id: String,
         option: KomgaUserCreateOption,
-    ) -> anyhow::Result<KomgaUser> {
+    ) -> anyhow::Result<()> {
         let client = reqwest::Client::new();
 
         let res = client
@@ -101,9 +101,13 @@ impl KomgaClient {
             .send()
             .await?;
 
-        let user: KomgaUser = res.json().await?;
+        let status_code = res.status();
 
-        Ok(user)
+        if status_code.is_success() {
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!("Failed to apply user restriction"))
+        }
     }
 
     pub async fn get_sharing_labels(&self) -> anyhow::Result<Vec<String>> {
@@ -132,5 +136,9 @@ impl KomgaClient {
         let libraries: Vec<KomgaMinimalLibrary> = res.json().await?;
 
         Ok(libraries)
+    }
+
+    pub fn get_host(&self) -> String {
+        self.url.clone()
     }
 }

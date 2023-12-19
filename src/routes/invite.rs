@@ -8,14 +8,19 @@ use axum::{
 };
 use redis::{aio::Connection, AsyncCommands};
 use serde_json::Value;
+use tracing::{error, info};
 
-use crate::{komga::KomgaUserCreateOptionSharedLibraries, AppState};
+use crate::{
+    komga::{KomgaUserCreate, KomgaUserCreateOption, KomgaUserCreateOptionSharedLibraries},
+    AppState,
+};
 
 use super::AuthToken;
 
 const KLIBRARIAN_INVITE_TOKEN: &str = "k-librarian:invite_tokens";
+const DEFAULT_ROLES: &[&str] = &["USER", "FILE_DOWNLOAD", "PAGE_STREAMING"];
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct InviteOption {
     #[serde(rename = "labelsAllow")]
     pub labels_allow: Option<Vec<String>>,
@@ -25,12 +30,31 @@ pub struct InviteOption {
     pub shared_libraries: Option<KomgaUserCreateOptionSharedLibraries>,
     #[serde(rename = "expiresAt")]
     pub expire_at: Option<u64>,
+    #[serde(rename = "roles")]
+    pub roles: Option<Vec<String>>,
+}
+
+impl Into<KomgaUserCreateOption> for InviteOption {
+    fn into(self) -> KomgaUserCreateOption {
+        KomgaUserCreateOption {
+            labels_allow: self.labels_allow,
+            labels_exclude: self.labels_exclude,
+            shared_libraries: self.shared_libraries,
+        }
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct InviteToken {
     token: String,
     option: InviteOption,
+    user_id: Option<String>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct InviteTokenApplicationRequest {
+    email: String,
+    password: String,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -47,6 +71,7 @@ pub async fn create_invite_token(
 
     let invite_token = InviteToken {
         token: token.clone(),
+        user_id: None,
         option,
     };
 
@@ -237,6 +262,198 @@ pub async fn delete_invite_token(
     (headers, serde_json::to_string(&wrapped_json).unwrap())
 }
 
+pub async fn create_user_in_komga(
+    redis_conn: &mut Connection,
+    komga: &crate::komga::KomgaClient,
+    token: &InviteToken,
+    payload: &InviteTokenApplicationRequest,
+) -> Result<(), anyhow::Error> {
+    let roles = token.option.roles.clone().unwrap_or(
+        DEFAULT_ROLES
+            .to_vec()
+            .iter()
+            .map(|x| x.to_string())
+            .collect(),
+    );
+
+    if let Some(user_id) = token.user_id.clone() {
+        info!(
+            "[{} / {}] User already created, applying restriction",
+            token.token, user_id
+        );
+        // do apply user restriction
+        let resp_restrict = komga
+            .apply_user_restriction(user_id, token.option.clone().into())
+            .await;
+
+        match resp_restrict {
+            Ok(_) => {
+                // remove the token
+                redis_conn
+                    .hdel(KLIBRARIAN_INVITE_TOKEN, token.token.clone())
+                    .await
+                    .unwrap_or(0);
+
+                return Ok(());
+            }
+            Err(error) => {
+                error!(
+                    "[{}] Failed applying restriction... ({})",
+                    token.token, error
+                );
+                anyhow::bail!("Failed to apply user restriction")
+            }
+        }
+    }
+
+    let user_create = KomgaUserCreate {
+        email: payload.email.clone(),
+        password: payload.password.clone(),
+        roles,
+    };
+
+    info!("[{}] Creating user...", token.token);
+    let res = komga.create_user(user_create).await;
+
+    match res {
+        Ok(data) => {
+            // save the user id
+            let invite_token = InviteToken {
+                token: token.token.clone(),
+                option: token.option.clone(),
+                user_id: Some(data.id.clone()),
+            };
+
+            info!(
+                "[{}] Done creating user, saving temp user ID... ({})",
+                token.token,
+                data.id.clone()
+            );
+            let _ = redis_conn
+                .hset(
+                    KLIBRARIAN_INVITE_TOKEN,
+                    token.token.clone(),
+                    serde_json::to_string(&invite_token).unwrap(),
+                )
+                .await
+                .unwrap_or(0);
+
+            // do user restriction
+            info!(
+                "[{}] Applying restriction for... ({})",
+                token.token,
+                data.id.clone()
+            );
+            let resp_restrict = komga
+                .apply_user_restriction(data.id.clone(), token.option.clone().into())
+                .await;
+
+            match resp_restrict {
+                Ok(_) => {
+                    // remove the token
+                    info!(
+                        "[{}] Done applying restriction, removing token... ({})",
+                        token.token,
+                        data.id.clone()
+                    );
+                    redis_conn
+                        .hdel(KLIBRARIAN_INVITE_TOKEN, token.token.clone())
+                        .await
+                        .unwrap_or(0);
+
+                    Ok(())
+                }
+                Err(_) => {
+                    info!(
+                        "[{}] Failed applying restriction... ({})",
+                        token.token, data.id
+                    );
+                    anyhow::bail!("Failed to apply user restriction")
+                }
+            }
+        }
+        Err(error) => {
+            anyhow::bail!("Failed to create user: {}", error)
+        }
+    }
+}
+
+pub async fn apply_invite_token(
+    State(state): State<AppState>,
+    Path(token): Path<String>,
+    Json(request): Json<InviteTokenApplicationRequest>,
+) -> impl IntoResponse {
+    let mut redis_conn = state.redis.get_async_connection().await.unwrap();
+
+    info!("Applying invite token: {}", token);
+    let data: Result<String, _> = redis_conn
+        .hget(KLIBRARIAN_INVITE_TOKEN, token.clone())
+        .await;
+
+    match data {
+        Ok(data) => {
+            let mut headers = HeaderMap::new();
+            headers.insert("Content-Type", "application/json".parse().unwrap());
+
+            let raw_val: InviteToken = serde_json::from_str(&data).unwrap();
+            info!("[{}] Found token, checking if expired", token);
+
+            match remove_token_or(&mut redis_conn, &raw_val).await {
+                Ok(_) => {
+                    info!("[{}] Found active, registering...", token);
+                    let res =
+                        create_user_in_komga(&mut redis_conn, &state.komga, &raw_val, &request)
+                            .await;
+
+                    match res {
+                        Ok(_) => {
+                            // wrap the json in a {"ok": true, "data": {}} object
+                            let wrapped_json: Value = serde_json::json!({
+                                "ok": true,
+                                "data": serde_json::json!({
+                                    "host": state.komga.get_host(),
+                                })
+                            });
+
+                            (headers, serde_json::to_string(&wrapped_json).unwrap())
+                        }
+                        Err(error) => {
+                            // wrap the json in a {"ok": true, "data": {}} object
+                            let wrapped_json: Value = serde_json::json!({
+                                "ok": false,
+                                "error": format!("Failed to create user: {}", error)
+                            });
+
+                            (headers, serde_json::to_string(&wrapped_json).unwrap())
+                        }
+                    }
+                }
+                Err(_) => {
+                    // wrap the json in a {"ok": true, "data": {}} object
+                    let wrapped_json: Value = serde_json::json!({
+                        "ok": false,
+                        "error": "Invite token expired"
+                    });
+
+                    (headers, serde_json::to_string(&wrapped_json).unwrap())
+                }
+            }
+        }
+        Err(_) => {
+            let mut headers = HeaderMap::new();
+            headers.insert("Content-Type", "application/json".parse().unwrap());
+
+            // wrap the json in a {"ok": true, "data": {}} object
+            let wrapped_json: Value = serde_json::json!({
+                "ok": false,
+                "error": "Invite token not found"
+            });
+
+            (headers, serde_json::to_string(&wrapped_json).unwrap())
+        }
+    }
+}
+
 pub async fn get_all_invite_token(
     _: AuthToken,
     State(state): State<AppState>,
@@ -272,6 +489,7 @@ pub fn invite_routes(state: AppState) -> Router<AppState> {
         .route("/", axum::routing::post(create_invite_token))
         .route("/:token", axum::routing::get(get_invite_token))
         .route("/:token", axum::routing::delete(delete_invite_token))
+        .route("/:token/apply", axum::routing::post(apply_invite_token))
         .route("/config", axum::routing::get(get_invite_config))
         .with_state(state)
 }
