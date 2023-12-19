@@ -1,0 +1,50 @@
+name: CI
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Rust Cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+              ~/.cargo/bin/
+              ~/.cargo/registry/index/
+              ~/.cargo/registry/cache/
+              ~/.cargo/git/db/
+              target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Setup npm modules
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+              node_modules/
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-npm-
+      - name: Build frontend
+        run: npm run build
+      - name: Build backend
+        run: cargo build --verbose
+      - name: Cargo clippy
+        run: cargo clippy --verbose -- -D warnings
+      - name: Cargo fmt
+        run: cargo fmt -- --check
