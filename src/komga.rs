@@ -1,8 +1,11 @@
+const USER_AGENT: &str = "K-Librarian/0.1.1 (+https://github.com/noaione/klibrarian)";
+
 #[derive(Debug)]
 pub struct KomgaClient {
     url: String,
     username: String,
     password: String,
+    client: reqwest::Client,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -97,10 +100,16 @@ impl std::fmt::Display for KomgaCommonError {
 
 impl KomgaClient {
     pub fn new(url: String, username: String, password: String) -> Self {
+        let client = reqwest::ClientBuilder::new()
+            .user_agent(USER_AGENT)
+            .build()
+            .unwrap();
+
         Self {
             url,
             username,
             password,
+            client,
         }
     }
 
@@ -130,8 +139,8 @@ impl KomgaClient {
     }
 
     pub async fn create_user(&self, user: KomgaUserCreate) -> Result<KomgaUser, KomgaCommonError> {
-        let client = reqwest::Client::new();
-        let res = client
+        let res = self
+            .client
             .post(format!("{}/api/v2/users", self.url))
             .basic_auth(&self.username, Some(&self.password))
             .json(&user)
@@ -155,9 +164,8 @@ impl KomgaClient {
         user_id: String,
         option: KomgaUserCreateOption,
     ) -> anyhow::Result<()> {
-        let client = reqwest::Client::new();
-
-        let res = client
+        let res = self
+            .client
             .patch(format!("{}/api/v2/users/{}", self.url, user_id))
             .basic_auth(&self.username, Some(&self.password))
             .json(&option)
@@ -174,9 +182,8 @@ impl KomgaClient {
     }
 
     pub async fn get_sharing_labels(&self) -> anyhow::Result<Vec<String>> {
-        let client = reqwest::Client::new();
-
-        let res = client
+        let res = self
+            .client
             .get(format!("{}/api/v1/sharing-labels", self.url))
             .basic_auth(&self.username, Some(&self.password))
             .send()
@@ -188,9 +195,8 @@ impl KomgaClient {
     }
 
     pub async fn get_libraries(&self) -> anyhow::Result<Vec<KomgaMinimalLibrary>> {
-        let client = reqwest::Client::new();
-
-        let res = client
+        let res = self
+            .client
             .get(format!("{}/api/v1/libraries", self.url))
             .basic_auth(&self.username, Some(&self.password))
             .send()
