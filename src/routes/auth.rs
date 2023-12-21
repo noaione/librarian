@@ -1,4 +1,4 @@
-use axum::{response::IntoResponse, Json, Router};
+use axum::{http::StatusCode, response::IntoResponse, Json, Router};
 
 use crate::AppState;
 
@@ -21,21 +21,30 @@ async fn auth_login(Json(payload): Json<LoginForm>) -> impl IntoResponse {
     match token {
         Ok(token) => {
             if token == payload.token {
-                Json(LoginResponse {
-                    ok: true,
-                    error: None,
-                })
+                (
+                    StatusCode::OK,
+                    Json(LoginResponse {
+                        ok: true,
+                        error: None,
+                    }),
+                )
             } else {
-                Json(LoginResponse {
-                    ok: false,
-                    error: Some("Invalid token".to_string()),
-                })
+                (
+                    StatusCode::UNAUTHORIZED,
+                    Json(LoginResponse {
+                        ok: false,
+                        error: Some("Invalid token".to_string()),
+                    }),
+                )
             }
         }
-        Err(_) => Json(LoginResponse {
-            ok: false,
-            error: Some("Invalid token".to_string()),
-        }),
+        Err(_) => (
+            StatusCode::UNAUTHORIZED,
+            Json(LoginResponse {
+                ok: false,
+                error: Some("Invalid token".to_string()),
+            }),
+        ),
     }
 }
 

@@ -102,7 +102,11 @@ pub async fn create_invite_token(
                 "error": format!("Failed to create invite token: {}", error)
             });
 
-            return (headers, serde_json::to_string(&wrapped_json).unwrap());
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                headers,
+                serde_json::to_string(&wrapped_json).unwrap(),
+            );
         }
     }
 
@@ -118,7 +122,11 @@ pub async fn create_invite_token(
         "data": invite_token_json
     });
 
-    (headers, serde_json::to_string(&wrapped_json).unwrap())
+    (
+        StatusCode::OK,
+        headers,
+        serde_json::to_string(&wrapped_json).unwrap(),
+    )
 }
 
 pub async fn get_invite_config(_: AuthToken) -> impl IntoResponse {
@@ -138,7 +146,11 @@ pub async fn get_invite_config(_: AuthToken) -> impl IntoResponse {
                 "error": "Failed to get labels from Komga"
             });
 
-            return (headers, serde_json::to_string(&wrapped_json).unwrap());
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                headers,
+                serde_json::to_string(&wrapped_json).unwrap(),
+            );
         }
     };
     let libraries = match komga.get_libraries().await {
@@ -153,7 +165,11 @@ pub async fn get_invite_config(_: AuthToken) -> impl IntoResponse {
                 "error": "Failed to get libraries from Komga"
             });
 
-            return (headers, serde_json::to_string(&wrapped_json).unwrap());
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                headers,
+                serde_json::to_string(&wrapped_json).unwrap(),
+            );
         }
     };
 
@@ -169,7 +185,11 @@ pub async fn get_invite_config(_: AuthToken) -> impl IntoResponse {
         }
     });
 
-    (headers, serde_json::to_string(&wrapped_json).unwrap())
+    (
+        StatusCode::OK,
+        headers,
+        serde_json::to_string(&wrapped_json).unwrap(),
+    )
 }
 
 async fn remove_token_or(redis_conn: &mut Connection, token: &InviteToken) -> Result<(), ()> {
@@ -216,7 +236,11 @@ pub async fn get_invite_token(
                         "data": raw_val,
                     });
 
-                    (headers, serde_json::to_string(&wrapped_json).unwrap())
+                    (
+                        StatusCode::OK,
+                        headers,
+                        serde_json::to_string(&wrapped_json).unwrap(),
+                    )
                 }
                 Err(_) => {
                     // wrap the json in a {"ok": true, "data": {}} object
@@ -225,7 +249,11 @@ pub async fn get_invite_token(
                         "error": "Invite token expired"
                     });
 
-                    (headers, serde_json::to_string(&wrapped_json).unwrap())
+                    (
+                        StatusCode::FORBIDDEN,
+                        headers,
+                        serde_json::to_string(&wrapped_json).unwrap(),
+                    )
                 }
             }
         }
@@ -239,7 +267,11 @@ pub async fn get_invite_token(
                 "error": "Invite token not found"
             });
 
-            (headers, serde_json::to_string(&wrapped_json).unwrap())
+            (
+                StatusCode::NOT_FOUND,
+                headers,
+                serde_json::to_string(&wrapped_json).unwrap(),
+            )
         }
     }
 }
@@ -266,7 +298,11 @@ pub async fn delete_invite_token(
         "ok": ok,
     });
 
-    (headers, serde_json::to_string(&wrapped_json).unwrap())
+    (
+        StatusCode::OK,
+        headers,
+        serde_json::to_string(&wrapped_json).unwrap(),
+    )
 }
 
 pub async fn create_user_in_komga(
@@ -534,7 +570,11 @@ pub async fn get_all_invite_token(
         "data": merged_token,
     });
 
-    (headers, serde_json::to_string(&wrapped_json).unwrap())
+    (
+        StatusCode::OK,
+        headers,
+        serde_json::to_string(&wrapped_json).unwrap(),
+    )
 }
 
 pub fn invite_routes(state: AppState) -> Router<AppState> {
