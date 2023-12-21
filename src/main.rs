@@ -25,7 +25,6 @@ mod routes;
 #[derive(Clone)]
 pub struct AppState {
     pub redis: Arc<redis::Client>,
-    pub komga: Arc<KomgaClient>,
 }
 
 #[tokio::main]
@@ -42,15 +41,7 @@ async fn main() {
     dotenv::dotenv().ok();
 
     std::env::var("TOKEN").expect("TOKEN not set");
-    let komga_host = std::env::var("KOMGA_HOST").expect("KOMGA_HOST not set");
-    let komga_username = std::env::var("KOMGA_USERNAME").expect("KOMGA_USERNAME not set");
-    let komga_password = std::env::var("KOMGA_PASSWORD").expect("KOMGA_PASSWORD not set");
-
-    let komga_client = KomgaClient::new(
-        komga_host.clone(),
-        komga_username.clone(),
-        komga_password.clone(),
-    );
+    let komga_client = KomgaClient::instance();
 
     let redis_host = std::env::var("REDIS_HOST").expect("REDIS_HOST not set");
     let redis_port = std::env::var("REDIS_PORT").expect("REDIS_PORT not set");
@@ -64,7 +55,7 @@ async fn main() {
     tracing::info!("🔌 Connecting to Redis at: {}", redis_url);
     let redis_client = redis::Client::open(redis_url).unwrap();
 
-    tracing::info!("🔌 Connecting to Komga at: {}", komga_host);
+    tracing::info!("🔌 Connecting to Komga at: {}", komga_client.get_host());
     let komga_user = komga_client.get_me().await.unwrap();
 
     // Check if ADMIN role
@@ -74,7 +65,6 @@ async fn main() {
 
     let state = AppState {
         redis: Arc::new(redis_client),
-        komga: Arc::new(komga_client),
     };
 
     let assets_dir = ServeDir::new("assets/assets");

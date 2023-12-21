@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct KomgaClient {
     url: String,
     username: String,
@@ -58,6 +58,18 @@ impl KomgaClient {
             username,
             password,
         }
+    }
+
+    pub fn instance() -> Self {
+        let komga_host = std::env::var("KOMGA_HOST").expect("KOMGA_HOST not set");
+        let komga_username = std::env::var("KOMGA_USERNAME").expect("KOMGA_USERNAME not set");
+        let komga_password = std::env::var("KOMGA_PASSWORD").expect("KOMGA_PASSWORD not set");
+
+        Self::new(
+            komga_host.clone(),
+            komga_username.clone(),
+            komga_password.clone(),
+        )
     }
 
     pub async fn get_me(&self) -> anyhow::Result<KomgaUser> {

@@ -11,7 +11,9 @@ use serde_json::Value;
 use tracing::{error, info};
 
 use crate::{
-    komga::{KomgaUserCreate, KomgaUserCreateOption, KomgaUserCreateOptionSharedLibraries},
+    komga::{
+        KomgaClient, KomgaUserCreate, KomgaUserCreateOption, KomgaUserCreateOptionSharedLibraries,
+    },
     AppState,
 };
 
@@ -116,10 +118,12 @@ pub async fn create_invite_token(
     (headers, serde_json::to_string(&wrapped_json).unwrap())
 }
 
-pub async fn get_invite_config(State(state): State<AppState>, _: AuthToken) -> impl IntoResponse {
+pub async fn get_invite_config(_: AuthToken) -> impl IntoResponse {
     // Get all the options available in Komga
 
-    let labels = match state.komga.get_sharing_labels().await {
+    let komga = KomgaClient::instance();
+
+    let labels = match komga.get_sharing_labels().await {
         Ok(labels) => labels,
         Err(_) => {
             let mut headers = HeaderMap::new();
@@ -134,7 +138,7 @@ pub async fn get_invite_config(State(state): State<AppState>, _: AuthToken) -> i
             return (headers, serde_json::to_string(&wrapped_json).unwrap());
         }
     };
-    let libraries = match state.komga.get_libraries().await {
+    let libraries = match komga.get_libraries().await {
         Ok(libraries) => libraries,
         Err(_) => {
             let mut headers = HeaderMap::new();
@@ -401,14 +405,15 @@ pub async fn apply_invite_token(
             match remove_token_or(&mut redis_conn, &raw_val).await {
                 Ok(_) => {
                     info!("[{}] Found active, registering...", token);
+                    let komga = KomgaClient::instance();
+
                     let res =
-                        create_user_in_komga(&mut redis_conn, &state.komga, &raw_val, &request)
-                            .await;
+                        create_user_in_komga(&mut redis_conn, &komga, &raw_val, &request).await;
 
                     match res {
                         Ok(_) => {
                             // wrap the json in a {"ok": true, "data": {}} object
-                            let mut komga_host = state.komga.get_host();
+                            let mut komga_host = komga.get_host();
 
                             if let Ok(komga_hostname) = std::env::var("KOMGA_HOSTNAME") {
                                 if !komga_hostname.trim().is_empty() {
