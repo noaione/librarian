@@ -539,10 +539,14 @@ pub async fn get_all_invite_token(
 
 pub fn invite_routes(state: AppState) -> Router<AppState> {
     Router::new()
-        .route("/", axum::routing::get(get_all_invite_token))
-        .route("/", axum::routing::post(create_invite_token))
-        .route("/:token", axum::routing::get(get_invite_token))
-        .route("/:token", axum::routing::delete(delete_invite_token))
+        .route(
+            "/",
+            axum::routing::get(get_all_invite_token).post(create_invite_token),
+        )
+        .route(
+            "/:token",
+            axum::routing::get(get_invite_token).delete(delete_invite_token),
+        )
         .route("/:token/apply", axum::routing::post(apply_invite_token))
         .route("/config", axum::routing::get(get_invite_config))
         .with_state(state)
