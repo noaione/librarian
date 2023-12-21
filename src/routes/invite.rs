@@ -6,6 +6,7 @@ use axum::{
     response::IntoResponse,
     Json, Router,
 };
+use garde::Validate;
 use redis::{aio::Connection, AsyncCommands};
 use serde_json::Value;
 use tracing::{error, info};
@@ -53,9 +54,11 @@ pub struct InviteToken {
     user_id: Option<String>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, garde::Validate)]
 pub struct InviteTokenApplicationRequest {
+    #[garde(email)]
     email: String,
+    #[garde(length(min = 6))]
     password: String,
 }
 
@@ -387,6 +390,24 @@ pub async fn apply_invite_token(
     Path(token): Path<String>,
     Json(request): Json<InviteTokenApplicationRequest>,
 ) -> impl IntoResponse {
+    if let Err(e) = request.validate(&()) {
+        let mut headers = HeaderMap::new();
+        headers.insert("Content-Type", "application/json".parse().unwrap());
+
+        let mut format_err = String::new();
+        for (field, err) in e.iter() {
+            format_err.push_str(&format!("- {}: {}", field, err));
+            format_err.push('\n');
+        }
+
+        // wrap the json in a {"ok": true, "data": {}} object
+        let wrapped_json: Value = serde_json::json!({
+            "ok": false,
+            "error": format!("Invalid request:\n{}", format_err)
+        });
+
+        return (headers, serde_json::to_string(&wrapped_json).unwrap());
+    }
     let mut redis_conn = state.redis.get_async_connection().await.unwrap();
 
     info!("Applying invite token: {}", token);
