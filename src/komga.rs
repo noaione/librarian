@@ -51,6 +51,50 @@ pub struct KomgaMinimalLibrary {
     pub unavailable: bool,
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct KomgaCommonErrorViolation {
+    pub field_name: String,
+    pub message: String,
+}
+
+impl std::fmt::Display for KomgaCommonErrorViolation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.field_name, self.message)
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct KomgaViolationsError {
+    pub violations: Vec<KomgaCommonErrorViolation>,
+}
+
+impl std::fmt::Display for KomgaViolationsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut violations = String::new();
+
+        for violation in &self.violations {
+            violations.push_str(&format!("{}\n", violation));
+        }
+
+        write!(f, "{}", violations)
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct KomgaCommonError {
+    timestamp: String,
+    status: u16,
+    pub error: String,
+    pub message: String,
+    path: String,
+}
+
+impl std::fmt::Display for KomgaCommonError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.error, self.message)
+    }
+}
+
 impl KomgaClient {
     pub fn new(url: String, username: String, password: String) -> Self {
         Self {
@@ -85,18 +129,25 @@ impl KomgaClient {
         Ok(user)
     }
 
-    pub async fn create_user(&self, user: KomgaUserCreate) -> anyhow::Result<KomgaUser> {
+    pub async fn create_user(&self, user: KomgaUserCreate) -> Result<KomgaUser, KomgaCommonError> {
         let client = reqwest::Client::new();
         let res = client
             .post(format!("{}/api/v2/users", self.url))
             .basic_auth(&self.username, Some(&self.password))
             .json(&user)
             .send()
-            .await?;
+            .await
+            .unwrap();
 
-        let user: KomgaUser = res.json().await?;
+        if res.status().is_success() {
+            let user: KomgaUser = res.json().await.unwrap();
 
-        Ok(user)
+            Ok(user)
+        } else {
+            let error: KomgaCommonError = res.json().await.unwrap();
+
+            Err(error)
+        }
     }
 
     pub async fn apply_user_restriction(

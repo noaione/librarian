@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use axum::{
     extract::{Path, State},
-    http::HeaderMap,
+    http::{HeaderMap, StatusCode},
     response::IntoResponse,
     Json, Router,
 };
@@ -380,7 +380,7 @@ pub async fn create_user_in_komga(
             }
         }
         Err(error) => {
-            anyhow::bail!("Failed to create user: {}", error)
+            anyhow::bail!("{}", error)
         }
     }
 }
@@ -406,7 +406,11 @@ pub async fn apply_invite_token(
             "error": format!("Invalid request:\n{}", format_err)
         });
 
-        return (headers, serde_json::to_string(&wrapped_json).unwrap());
+        return (
+            StatusCode::BAD_REQUEST,
+            headers,
+            serde_json::to_string(&wrapped_json).unwrap(),
+        );
     }
     let mut redis_conn = state.redis.get_async_connection().await.unwrap();
 
@@ -449,7 +453,11 @@ pub async fn apply_invite_token(
                                 })
                             });
 
-                            (headers, serde_json::to_string(&wrapped_json).unwrap())
+                            (
+                                StatusCode::OK,
+                                headers,
+                                serde_json::to_string(&wrapped_json).unwrap(),
+                            )
                         }
                         Err(error) => {
                             // wrap the json in a {"ok": true, "data": {}} object
@@ -458,7 +466,11 @@ pub async fn apply_invite_token(
                                 "error": format!("Failed to create user: {}", error)
                             });
 
-                            (headers, serde_json::to_string(&wrapped_json).unwrap())
+                            (
+                                StatusCode::BAD_REQUEST,
+                                headers,
+                                serde_json::to_string(&wrapped_json).unwrap(),
+                            )
                         }
                     }
                 }
@@ -469,7 +481,11 @@ pub async fn apply_invite_token(
                         "error": "Invite token expired"
                     });
 
-                    (headers, serde_json::to_string(&wrapped_json).unwrap())
+                    (
+                        StatusCode::FORBIDDEN,
+                        headers,
+                        serde_json::to_string(&wrapped_json).unwrap(),
+                    )
                 }
             }
         }
@@ -483,7 +499,11 @@ pub async fn apply_invite_token(
                 "error": "Invite token not found"
             });
 
-            (headers, serde_json::to_string(&wrapped_json).unwrap())
+            (
+                StatusCode::NOT_FOUND,
+                headers,
+                serde_json::to_string(&wrapped_json).unwrap(),
+            )
         }
     }
 }
