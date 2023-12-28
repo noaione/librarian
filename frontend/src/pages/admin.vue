@@ -25,6 +25,14 @@
           <i-mdi-plus class="mr-1 h-6 w-6" />
           Create
         </button>
+        <button
+          v-if="addMode"
+          class="font-variable flex flex-row items-center border-2 border-red-500 bg-transparent px-2 py-1 text-sm text-red-500 transition variation-weight-[550] hover:bg-red-600 hover:text-white"
+          @click="addMode = false"
+        >
+          <i-mdi-close class="mr-1 h-6 w-6" />
+          Cancel
+        </button>
       </div>
       <invite-add v-if="addMode && !loading" @add="createInvite" />
       <div v-if="currentInvites && currentInvites.length > 0" class="flex flex-col gap-2">
@@ -66,6 +74,7 @@
       </div>
     </div>
   </main>
+  <footer-info unpin />
 </template>
 
 <script setup lang="ts">

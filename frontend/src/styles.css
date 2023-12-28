@@ -13,6 +13,10 @@ body {
   }
 }
 
+#app {
+  @apply min-h-screen flex flex-col min-w-[100vw] w-full;
+}
+
 .toast-container {
   @apply border-2 bg-white px-2 py-2 dark:bg-black;
 }

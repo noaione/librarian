@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     DarkToggle: typeof import('./../components/DarkToggle.vue')['default']
     ExpiryTime: typeof import('./../components/ExpiryTime.vue')['default']
+    FooterInfo: typeof import('./../components/FooterInfo.vue')['default']
     IMdiArrowRightThick: typeof import('~icons/mdi/arrow-right-thick')['default']
     IMdiBookOutline: typeof import('~icons/mdi/book-outline')['default']
     IMdiCheckCircle: typeof import('~icons/mdi/check-circle')['default']

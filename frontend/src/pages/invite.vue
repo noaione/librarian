@@ -1,5 +1,5 @@
 <template>
-  <main class="mx-auto my-auto flex h-screen flex-col items-center justify-center">
+  <main class="mx-auto my-auto flex h-screen w-full flex-col items-center justify-center">
     <i-mdi-key-chain class="mb-2 h-12 w-12" />
     <div class="font-variable text-xl variation-weight-bold">K-Librarian</div>
     <hr v-if="inviteData" class="server-width my-4 border-gray-600 opacity-70 dark:border-gray-400" />
@@ -81,6 +81,7 @@
       <dark-toggle />
     </div>
   </main>
+  <footer-info />
 </template>
 
 <script setup lang="ts">

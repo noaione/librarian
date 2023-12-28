@@ -1,5 +1,5 @@
 <template>
-  <main class="mx-auto my-auto flex h-screen flex-col items-center justify-center">
+  <main class="mx-auto my-auto flex h-screen w-full flex-col items-center justify-center">
     <i-mdi-web-off class="mb-2 h-12 w-12" />
     <div class="font-variable mb-2 text-xl variation-weight-bold">Page Not found</div>
     <code
@@ -8,6 +8,7 @@
       {{ $route.fullPath }}
     </code>
   </main>
+  <footer-info />
 </template>
 
 <script setup lang="ts">
