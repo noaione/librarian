@@ -54,5 +54,5 @@ REDIS_PORT=6379
 
 ## Attribution
 
-The icon/favicon/logo used by K-Librarian is a non-modified version of icon called **books icon** by Freepik: [Flaticon](https://www.flaticon.com/free-icons/books)
+The icon/favicon/logo used by K-Librarian is a non-modified version of icon called **books icon** by Freepik: [Flaticon](https://www.flaticon.com/free-icons/books)<br />
 All rights reserved to the original creator.

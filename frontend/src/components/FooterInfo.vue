@@ -1,5 +1,6 @@
 <template>
   <div
+    v-if="enabled"
     :class="`${
       unpin ? 'max-bottom' : 'pin-bottom pin-center'
     } font-variable flex flex-col items-center text-sm variation-weight-semibold`"
@@ -25,6 +26,16 @@
 defineProps<{
   unpin?: boolean;
 }>();
+
+const enabled = ref(true);
+
+onMounted(() => {
+  const disabled = (import.meta.env.VITE_NO_FOOTER ?? "") === "true";
+
+  if (disabled) {
+    enabled.value = false;
+  }
+});
 </script>
 
 <style scoped lang="postcss">
