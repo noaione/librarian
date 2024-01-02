@@ -43,3 +43,55 @@ jobs:
         run: cargo clippy --verbose -- -D warnings
       - name: Cargo fmt
         run: cargo fmt -- --check
+  release:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Rust Cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+              ~/.cargo/bin/
+              ~/.cargo/registry/index/
+              ~/.cargo/registry/cache/
+              ~/.cargo/git/db/
+              target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build frontend
+        run: npm run build
+      - name: Build backend
+        run: cargo build --release --verbose
+      # Package the binary + assets
+      # binary: /target/release/k-librarian.exe
+      # assets: /assets/
+      - name: Package
+        run: |
+          mkdir -p /tmp/k-librarian
+          cp target/release/k-librarian /tmp/k-librarian/
+          cp -r assets /tmp/k-librarian/
+          cd /tmp
+          zip -r k-librarian.zip k-librarian
+      # Upload the binary + assets
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: k-librarian
+          path: /tmp/k-librarian.zip
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: /tmp/k-librarian.zip
+          generate_release_notes: true
+          # Put in draft so I can manually review
+          draft: true
