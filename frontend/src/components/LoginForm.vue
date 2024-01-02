@@ -1,7 +1,7 @@
 <template>
-  <main class="mx-auto my-auto flex h-screen flex-col items-center justify-center">
+  <main class="mx-auto my-auto flex h-screen w-full flex-col items-center justify-center">
     <i-mdi-login class="mb-2 h-12 w-12" />
-    <div class="font-variable variation-weight-bold text-xl">Login</div>
+    <div class="font-variable text-xl variation-weight-bold">Login</div>
     <hr class="server-width my-4 border-gray-600 opacity-70 dark:border-gray-400" />
     <div class="server-width mb-2 flex flex-col justify-start">
       <label for="token-form" class="mb-2 text-sm">Token</label>

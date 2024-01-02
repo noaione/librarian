@@ -74,7 +74,7 @@
       </div>
     </div>
   </main>
-  <footer-info unpin />
+  <footer-info :unpin="auth.isLoggedIn" />
 </template>
 
 <script setup lang="ts">
