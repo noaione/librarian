@@ -38,13 +38,38 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let version = env!("CARGO_PKG_VERSION");
+
+    tracing::info!("📚 K-Librarian v{}", version);
     dotenv::dotenv().ok();
 
-    std::env::var("TOKEN").expect("TOKEN not set");
+    match std::env::var("TOKEN") {
+        Ok(_) => {}
+        Err(_) => {
+            tracing::error!("💥 `TOKEN` environment variable is not set!");
+            tracing::error!("💥 Please set it as it's used as your login token to the dashboard");
+            std::process::exit(1);
+        }
+    }
+
     let komga_client = KomgaClient::instance();
 
-    let redis_host = std::env::var("REDIS_HOST").expect("REDIS_HOST not set");
-    let redis_port = std::env::var("REDIS_PORT").expect("REDIS_PORT not set");
+    let redis_host = match std::env::var("REDIS_HOST") {
+        Ok(host) => host,
+        Err(_) => {
+            tracing::error!("💥 `REDIS_HOST` environment variable is not set!");
+            tracing::error!("    Please set it as it's used to connect to Redis");
+            std::process::exit(1);
+        }
+    };
+    let redis_port = match std::env::var("REDIS_PORT") {
+        Ok(port) => port,
+        Err(_) => {
+            tracing::error!("💥 `REDIS_PORT` environment variable is not set!");
+            tracing::error!("    Please set it as it's used to connect to Redis");
+            std::process::exit(1);
+        }
+    };
     let redis_pass = std::env::var("REDIS_PASS").unwrap_or("".to_string());
 
     let mut redis_url = format!("redis://{}:{}", redis_host, redis_port);
@@ -55,13 +80,34 @@ async fn main() {
     tracing::info!("🔌 Connecting to Redis at: {}", redis_url);
     let redis_client = redis::Client::open(redis_url).unwrap();
 
-    tracing::info!("🔌 Connecting to Komga at: {}", komga_client.get_host());
-    let komga_user = komga_client.get_me().await.unwrap();
-
-    // Check if ADMIN role
-    if !komga_user.roles.contains(&"ADMIN".to_string()) {
-        panic!("Provided Komga user is not an ADMIN!")
+    // Test Redis connection
+    match redis_client.get_async_connection().await {
+        Ok(_) => {
+            tracing::info!("  ✨ Connected to Redis");
+        }
+        Err(e) => {
+            tracing::error!("  💥 Failed to connect to Redis: {}", e);
+            std::process::exit(1);
+        }
     }
+
+    tracing::info!("🔌 Connecting to Komga at: {}", komga_client.get_host());
+    match komga_client.get_me().await {
+        Ok(user) => {
+            // Check if ADMIN role
+            if !user.roles.contains(&"ADMIN".to_string()) {
+                tracing::error!(
+                    "  😔 Provided Komga user is not an ADMIN, please use an account with admin privilege!"
+                );
+                std::process::exit(1);
+            }
+            tracing::info!("  ✨ Connected to Komga");
+        }
+        Err(e) => {
+            tracing::error!("  💥 Failed to connect to Komga: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     let state = AppState {
         redis: Arc::new(redis_client),
