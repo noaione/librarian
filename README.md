@@ -10,7 +10,13 @@ Made on top of [Axum](https://github.com/tokio-rs/axum) for high performance and
 3. Redis
 4. Komga server
 
-## Usages
+## Installing
+Download new releases at: https://github.com/noaione/klibrarian/releases
+
+Or, get the latest development build at: https://github.com/noaione/klibrarian/actions/workflows/ci.yml<br />
+Just click on the latest successful build at download the `k-librarian` artifacts
+
+## Compiling
 1. Install Node/NPM, Rust and Redis
 2. Clone this repository
 3. [Configure](#configuration) your instances
