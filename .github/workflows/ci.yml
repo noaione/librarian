@@ -91,6 +91,7 @@ jobs:
           mkdir -p /tmp/k-librarian
           cp target/release/k-librarian /tmp/k-librarian/
           cp -r assets /tmp/k-librarian/
+          cp .env.example /tmp/k-librarian/.env-example
           zip -r k-librarian-${{ runner.os }}.zip /tmp/k-librarian
       - name: Package (Win32)
         # Only run in windows, use win32 pathing
@@ -99,6 +100,7 @@ jobs:
           mkdir -p final
           cp target/release/k-librarian.exe final/
           cp -r assets final/
+          cp .env.example final/.env-example
           cd final
           Compress-Archive -Path * -DestinationPath ../k-librarian-win_x86-64.zip
           cd ..
@@ -111,6 +113,7 @@ jobs:
           path: |
             /tmp/k-librarian/k-librarian*
             /tmp/k-librarian/assets
+            /tmp/k-librarian/.env-example
       - name: Upload (Win32)
         uses: actions/upload-artifact@v4
         if: matrix.os == 'windows-latest'
@@ -119,6 +122,7 @@ jobs:
           path: |
             final/k-librarian*
             final/assets
+            final/.env-example
       - name: Release
         uses: softprops/action-gh-release@v1
         # Run only on tags
