@@ -60,6 +60,21 @@ fn is_dist_folder_built(dist_dir: &Path) {
     }
 }
 
+fn fix_index_carriage(index_html: String) -> String {
+    // On GitHub CI Windows, the compilation would fail because of carriage returns
+    // error: bare CR not allowed in raw string
+    // D:\a\klibrarian\klibrarian\target\release\build\k-librarian-89d5ffecf8f94d3a\out/index_html.rs:36:25
+
+    // This is a hacky way to fix bare CRs in the index.html file
+    let temp = index_html.replace("\r\n", "\n").replace("\r", "\n");
+    #[cfg(windows)]
+    let index_html = temp.replace("\n", "\r\n");
+    #[cfg(not(windows))]
+    let index_html = temp;
+
+    index_html
+}
+
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
@@ -107,6 +122,7 @@ fn main() {
 
     // Read index.html and create a rust file in out_dir called index_html.rs
     let index_html = fs::read_to_string(dist_dir.join("index.html")).unwrap();
+    let index_html = fix_index_carriage(index_html);
 
     let mut writer = File::create(Path::new(&out_dir).join("index_html.rs")).unwrap();
     writer
