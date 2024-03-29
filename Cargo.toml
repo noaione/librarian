@@ -22,3 +22,5 @@ urlencoding = "2.1.3"
 redis = {version = "0.25", features = ["aio", "tokio-comp"]}
 chrono = "0.4"
 garde = {version = "0.18", features = ["derive", "email", "email-idna", "serde"]}
+
+# CI-PROFILE-MARK
