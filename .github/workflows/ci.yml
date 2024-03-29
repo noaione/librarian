@@ -32,7 +32,7 @@ jobs:
           # Windows 10 (x64)
           - [windows-latest, x86_64-pc-windows-msvc]
       fail-fast: false
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os[0] }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@b32f140b0c872d58512e0a66172253c302617b90
