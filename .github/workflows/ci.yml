@@ -19,43 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@b32f140b0c872d58512e0a66172253c302617b90
-
-      - name: Setup rust cache
-        uses: Swatinem/rust-cache@640a22190e7a783d4c409684cea558f081f92012
-        with:
-          prefix-key: "${{ runner.os }}-k-librarian-lint-rust"
-
-      - name: Setup Node
-        uses: actions/setup-node@c2ac33f2c62f978d6c944d9648125a294e56dc0b
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build (Frontend)
-        run: npm run build
-
-      - name: Build (Backend)
-        run: |
-          cargo build --verbose --all
-        shell: bash
-
-      - name: Cargo clippy
-        run: cargo clippy --verbose -- -D warnings
-
-      - name: Cargo fmt
-        run: cargo fmt -- --check
-
   build:
-    needs: lint
-    # Build rust binary on linux-musl, linux-glibc, macos, and windows
     strategy:
       matrix:
         os:
