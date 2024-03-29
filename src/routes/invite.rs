@@ -7,7 +7,7 @@ use axum::{
     Json, Router,
 };
 use garde::Validate;
-use redis::{aio::Connection, AsyncCommands};
+use redis::{aio::MultiplexedConnection, AsyncCommands};
 use serde_json::Value;
 use tracing::{error, info};
 
@@ -80,7 +80,11 @@ pub async fn create_invite_token(
         option,
     };
 
-    let mut redis_conn = state.redis.get_async_connection().await.unwrap();
+    let mut redis_conn = state
+        .redis
+        .get_multiplexed_async_connection()
+        .await
+        .unwrap();
     // use sets to store our tokens
     let res: Result<i32, redis::RedisError> = redis_conn
         .hset(
@@ -192,14 +196,17 @@ pub async fn get_invite_config(_: AuthToken) -> impl IntoResponse {
     )
 }
 
-async fn remove_token_or(redis_conn: &mut Connection, token: &InviteToken) -> Result<(), ()> {
+async fn remove_token_or(
+    redis_conn: &mut MultiplexedConnection,
+    token: &InviteToken,
+) -> Result<(), ()> {
     let current_unix: u64 = chrono::Utc::now().timestamp() as u64;
 
     match token.option.expire_at {
         Some(expire_at) => {
             if current_unix > expire_at {
                 redis_conn
-                    .hdel("k-librarian:invite_tokens", token.token.clone())
+                    .hdel(KLIBRARIAN_INVITE_TOKEN, token.token.clone())
                     .await
                     .unwrap_or(0);
                 Err(())
@@ -215,7 +222,11 @@ pub async fn get_invite_token(
     State(state): State<AppState>,
     Path(token): Path<String>,
 ) -> impl IntoResponse {
-    let mut redis_conn = state.redis.get_async_connection().await.unwrap();
+    let mut redis_conn = state
+        .redis
+        .get_multiplexed_async_connection()
+        .await
+        .unwrap();
 
     let data: Result<String, _> = redis_conn
         .hget(KLIBRARIAN_INVITE_TOKEN, token.clone())
@@ -281,7 +292,11 @@ pub async fn delete_invite_token(
     State(state): State<AppState>,
     Path(token): Path<String>,
 ) -> impl IntoResponse {
-    let mut redis_conn = state.redis.get_async_connection().await.unwrap();
+    let mut redis_conn = state
+        .redis
+        .get_multiplexed_async_connection()
+        .await
+        .unwrap();
 
     let data = redis_conn
         .hdel(KLIBRARIAN_INVITE_TOKEN, token)
@@ -306,7 +321,7 @@ pub async fn delete_invite_token(
 }
 
 pub async fn create_user_in_komga(
-    redis_conn: &mut Connection,
+    redis_conn: &mut MultiplexedConnection,
     komga: &crate::komga::KomgaClient,
     token: &InviteToken,
     payload: &InviteTokenApplicationRequest,
@@ -448,7 +463,11 @@ pub async fn apply_invite_token(
             serde_json::to_string(&wrapped_json).unwrap(),
         );
     }
-    let mut redis_conn = state.redis.get_async_connection().await.unwrap();
+    let mut redis_conn = state
+        .redis
+        .get_multiplexed_async_connection()
+        .await
+        .unwrap();
 
     info!("Applying invite token: {}", token);
     let data: Result<String, _> = redis_conn
@@ -548,7 +567,11 @@ pub async fn get_all_invite_token(
     _: AuthToken,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let mut redis_conn = state.redis.get_async_connection().await.unwrap();
+    let mut redis_conn = state
+        .redis
+        .get_multiplexed_async_connection()
+        .await
+        .unwrap();
 
     let all_keys: HashMap<String, String> = redis_conn
         .hgetall(KLIBRARIAN_INVITE_TOKEN)

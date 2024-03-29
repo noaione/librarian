@@ -7,7 +7,7 @@ Made on top of [Axum](https://github.com/tokio-rs/axum) for high performance and
 ## Requirements
 1. Node.js 18.x or higher
 2. Rust 1.66 or higher
-3. Redis
+3. Redis-compatible (any post-SSPL fork, Garnet, etc.)
 4. Komga server
 
 ## Installing

@@ -81,7 +81,7 @@ async fn main() {
     let redis_client = redis::Client::open(redis_url).unwrap();
 
     // Test Redis connection
-    match redis_client.get_async_connection().await {
+    match redis_client.get_multiplexed_async_connection().await {
         Ok(_) => {
             tracing::info!("  ✨ Connected to Redis");
         }

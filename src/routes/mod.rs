@@ -18,6 +18,7 @@ pub fn api(state: AppState) -> Router<AppState> {
         .with_state(state.clone())
 }
 
+#[allow(dead_code)]
 pub struct AuthToken(HeaderValue);
 
 #[derive(serde::Serialize)]
@@ -48,18 +49,26 @@ where
                     });
                 }
 
-                return Ok(AuthToken(HeaderValue::from_str(&token).unwrap()));
+                match HeaderValue::from_str(&token) {
+                    Ok(token) => Ok(AuthToken(token)),
+                    Err(_) => {
+                        return Err(RejectAuthToken {
+                            ok: false,
+                            error: "Invalid token format",
+                        });
+                    }
+                }
             } else {
-                return Err(RejectAuthToken {
+                Err(RejectAuthToken {
                     ok: false,
-                    error: "Invalid token",
-                });
+                    error: "Missing Bearer prefix",
+                })
             }
         } else {
-            return Err(RejectAuthToken {
+            Err(RejectAuthToken {
                 ok: false,
-                error: "Invalid token",
-            });
+                error: "Missing Authorization header",
+            })
         }
     }
 }
