@@ -81,7 +81,7 @@ jobs:
           cd ../../..
           mv target/${{ matrix.os[1] }}/release/k-librarian final/
           cp -r assets final/
-          cp .env.example final/.env-example
+          cp .env.example final/
           cd final
           tar -czvf ../k-librarian-${{ matrix.os[1] }}.tar.gz *
           cd ..
