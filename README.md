@@ -7,7 +7,7 @@ Made on top of [Axum](https://github.com/tokio-rs/axum) for high performance and
 ## Requirements
 1. Node.js 18.x or higher
 2. Rust 1.66 or higher
-3. Redis-compatible server (any post-SSPL fork, Garnet, etc.)
+3. Redis-compatible server (any pre-SSPL fork, Garnet, etc.)
 4. Komga server
 
 ## Installing
@@ -60,5 +60,5 @@ REDIS_PORT=6379
 
 ## Attribution
 
-The icon/favicon/logo used by K-Librarian is a non-modified version of icon called **books icon** by Freepik: [Flaticon](https://www.flaticon.com/free-icons/books)<br />
+The icon/favicon/logo used by K-Librarian is a non-modified version of icon called **books icon** by Freepik: [Flaticon](https://www.flaticon.com/free-icon/books_3771417?term=books&page=1&position=14&origin=tag&related_id=3771417)<br />
 All rights reserved to the original creator.
