@@ -1,4 +1,4 @@
-const USER_AGENT: &str = "K-Librarian/0.1.1 (+https://github.com/noaione/klibrarian)";
+const USER_AGENT: &str = "K-Librarian/0.1.4 (+https://github.com/noaione/klibrarian)";
 
 #[derive(Debug)]
 pub struct KomgaClient {
