@@ -57,7 +57,7 @@ function tryToExtractInviteCode(inviteCode: string) {
     }
   }
 
-  return;
+  return inviteCode;
 }
 
 function redirectToInvite() {
