@@ -42,22 +42,22 @@ const inputRef = ref<HTMLInputElement>();
 const inviteCode = ref();
 
 function tryToExtractInviteCode(inviteCode: string) {
+  const uuidRe = /\w{8}(?:-\w{4}){3}-\w{12}/g;
   try {
     const url = new URL(inviteCode);
 
     const params = new URLSearchParams(url.search);
-
-    return params.get("token");
+    const token = params.get("token");
+    if (token && uuidRe.test(token)) {
+      return token;
+    }
   } catch {
-    // check if valid UUID
-    const uuidre = /\w{8}(?:-\w{4}){3}-\w{12}/g;
-
-    if (uuidre.test(inviteCode)) {
-      inviteCode;
+    if (uuidRe.test(inviteCode)) {
+      return inviteCode;
     }
   }
 
-  return inviteCode;
+  return;
 }
 
 function redirectToInvite() {
